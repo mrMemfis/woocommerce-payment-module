@@ -300,25 +300,45 @@ function bt_begateway_go()
         exit('Sorry - there was an error contacting the bank server, please try later');
       }
 
-      wc_enqueue_js('
-        jQuery("body").block({
-          message: "'.__('Thank you for your order. We are now redirecting you to make the payment.', 'woocommerce-begateway').'",
-            overlayCSS: {
-              background: "#fff",
-              opacity: 0.6
-            },
-            css: {
-              padding:        20,
-              textAlign:      "center",
-              color:          "#555",
-              border:         "3px solid #aaa",
-              backgroundColor:"#fff",
-              cursor:         "wait",
-              lineHeight:		"32px"
-            }
-        });
-        jQuery("#submit_begateway_payment_form").click();
-      ');
+      $stringCssForOutput=<<<CSSOUTPUT
+      <style>
+        #shadow{
+               display: block;
+               position: absolute;
+               top: 0%;
+               left: 0%;
+               width: 100%;
+               height: 100%;
+               background-color: #000;
+               z-index:999;
+               -moz-opacity: 0.5;
+               opacity:.50;
+                   filter: alpha(opacity=50);}
+        #redirectMessage {
+               display: block;
+               position:absolute;
+               top: 15%;
+               left: 25%;
+               width: 50%;
+               height: 30%;
+               padding: 26px 25px 10px 25px;
+               background-color: #fff;
+               z-index:9999;
+               overflow: auto;
+               border-radius: 6px;
+               moz-border-radius: 6px;
+               -webkit-border-radius: 6px;    }
+       </style>
+CSSOUTPUT;
+    echo($stringCssForOutput);
+        $messageForOutput = __('Thank you for your order. We are now redirecting you to make the payment.', 'woocommerce-begateway');
+        $stringJsForOutput=<<<JSOUTPUT
+            var message="$messageForOutput",
+                htmlBlock = "<div id='redirectMessage'><h3>"+message+"</h3></div><div id='shadow'></div>";
+            jQuery('body').append(htmlBlock);
+            jQuery('#submit_begateway_payment_form').click();
+JSOUTPUT;
+    wc_enqueue_js($stringJsForOutput);
       return '<form action="'.$payment_url.'" method="post" id="begateway_payment_form">
         <input type="hidden" name="token" value="' . $response->getToken() . '">
         <input type="submit" class="button-alt" id="submit_begateway_payment_form" value="'.__('Make payment', 'woocommerce-begateway').'" /> <a class="button cancel" href="'.$order->get_cancel_order_url().'">'.__('Cancel order &amp; restore cart', 'woothemes').'</a>
